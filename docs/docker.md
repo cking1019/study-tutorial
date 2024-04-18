@@ -75,7 +75,7 @@ docker search mysql --filter=STARS=3000  # 过滤STARS大于3000的镜像
 ## 4.2 拉取镜像
 
 ~~~shell
-docker pull mysql  # 如果不加tag，则默认下载latest版
+docker pull mysql            # 如果不加tag，则默认下载latest版
 docker pull imageName[:tag]  # tag指定版本号
 ~~~
 
@@ -109,18 +109,18 @@ docker kill    container_id	 # 强制停止当前的容器
 ## 5.2 运行nginx
 
 ~~~shell
-docker run -d -p 3344:80 nginx --name nginx01
+docker run -d --name nginx-container -p 3344:80 nginx
 # -d 后台运行
 # --name 容器命名
 # -p 宿主机端口:容器内端口
-docker exec -it nginx01 /bin/bash
+docker exec -it nginx-container /bin/bash
 ~~~
 
 ## 5.3 运行tomcat
 
 ~~~shell
-docker run -d -p 3345:8080 tomcat:9.0 --name tomcat01
-docker exec -it tomcat01 /bin/bash
+docker run -d --name tomcat-container -p 3345:8080 tomcat:9.0
+docker exec -it tomcat-container /bin/bash
 ~~~
 
 # 6、安装portainer
@@ -147,7 +147,7 @@ docker inspect b4138bb71efe  # 查看容器的详细信息
 **MySQL的数据持久化**
 
 ~~~shell
-docker run -d -p 3310:3306 -v /home/mysql/conf:/etc/mysql/conf.d -v /home/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 --name mysql01 mysql
+docker run -d --name mysql-container -v /home/mysql/conf:/etc/mysql/conf.d -v /home/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=your_password -p 3306:3306 mysql:latest
 -d  # 后台运行
 -p  # 端口映射
 -v  # 卷挂载
