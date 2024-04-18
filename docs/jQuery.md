@@ -160,7 +160,7 @@ const db = mysql.createPool({
 
 // select
 selectFunc = () => {
-    const sqlStr = 'select * from tag'
+    const sqlStr = 'select * from tag';
     db.query(sqlStr, (err, res) => {
         if(err) return console.log(err.message)
         console.log(res)
@@ -168,27 +168,27 @@ selectFunc = () => {
 }
 
 insertFunc = () => {
-    const sqlStr = 'insert into tag values(?, ?, ?, ?)'
+    const sqlStr = 'insert into tag values(?, ?, ?, ?)';
     db.query(sqlStr, [33, 'test', 2, new Date()], (err, res) => {
-        if(err) return console.log(err.message)
-        if(res.affectedRows === 1) console.log('insert into successfully!')
+        if(err) return console.log(err.message);
+        if(res.affectedRows === 1) console.log('insert into successfully!');
     })
 }
 
 deleteFunc = () => {
-    const sqlStr = 'delete from tag where id = ?'
+    const sqlStr = 'delete from tag where id = ?';
     db.query(sqlStr, 33, (err, res) => {
-        if(err) return console.log(err.message)
-        if(res.affectedRows === 1) console.log('delete successfully!')
+        if(err) return console.log(err.message);
+        if(res.affectedRows === 1) console.log('delete successfully!');
     })
 }
 
 updateFunc = () => {
-    const sqlStr = 'update tag set ? where id=?'
+    const sqlStr = 'update tag set ? where id=?';
     const data = {id: 32, name: 'test', number: 100, date: new Date()}
     db.query(sqlStr, [data, data.id], (err, res) => {
-        if(err) return console.log(err.message)
-        if(res.affectedRows === 1) console.log('update successfully')
+        if(err) return console.log(err.message);
+        if(res.affectedRows === 1) console.log('update successfully');
     })
 }
 
@@ -202,7 +202,7 @@ setTimeout(() => {
 }, 1000);
 ~~~
 
-# 8、JAJX的应用
+# 8、AJAX的应用
 
 ## 8.1、jQuery.ajax(url, [settings])
 

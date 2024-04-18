@@ -28,8 +28,8 @@ DIR             # 显示当前目录下的所有文件及文件夹
 ECHO hello > test.txt   # 覆盖
 ECHO hello >> test.txt  # 追加
 
-ECHO hello & ECHO world  # 并行执行。如果第一条命令执行失败，那么后面的命令可以被执行
-ECHO hello && dir e:     # 串行执行。如果前一条命令执行失败，那么后面的命令不会被执行
+ECHO hello & ECHO world  # 第一条命令执行成功与否，后面的命令都将被执行
+ECHO hello && dir e:     # 第一条命令执行失败，后面的命令将不被执行
 
 IPCONFIG | FINDSTR IPv4   # 管道运算符，第一条命令的输出用作第二条命令的输入
 ECHO hello || ECHO world  # 当第一条命令执行成功时，后面的命令不会执行

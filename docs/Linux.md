@@ -174,3 +174,8 @@ $@  # 所有参数
 $?  # 上一指令的返回值，成功返回True，失败返回False
 ~~~
 
+~~~
+# 使得ubuntu与win可以互相复制粘贴
+apt-get install open-vm-tools-desktop
+~~~
+
