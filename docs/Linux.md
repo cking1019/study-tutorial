@@ -179,3 +179,10 @@ $?  # 上一指令的返回值，成功返回True，失败返回False
 apt-get install open-vm-tools-desktop
 ~~~
 
+# 7、vim编辑器命令
+
+~~~bat
+# 替换文件中的变量，/gbiao'sh
+:%s/cn.archive.ubuntu.com/mirrors.aliyun.com/g
+~~~
+

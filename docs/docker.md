@@ -13,13 +13,17 @@ yum install docker-ce docker-ce-cli containerd.io
 systemctl start docker
 # 6、查看docker版本
 docker version
-# 7、下载镜像
-docker pull mysql
-# 8、运行镜像
-docker run mysql
-~~~
 
-~~~shell
+docker --version             # 显示docker的版本信息
+docker info					 # 显示docker的系统信息，包括镜像和容器的数量
+docker command --help		 # 帮助命令
+
+docker inspect container_id  # 查看容器的详细信息
+
+docker images
+-a # all，列出所有镜像
+-q # quiet，只显示镜像的id
+
 # 1、卸载依赖
 yum remove docker-ce docker-ce-cli containerd.io
 # 2、删除资源
@@ -29,14 +33,14 @@ rm -rf /var/lib/docker  # /var/lib/docker为docker的默认工作路径
 # 2、阿里云加速
 
 ~~~shell
-sudo mkdir -p /etc/docker
-sudo tee /etc/docker/daemon.json <<-'EOF'
+mkdir -p /etc/docker
+tee /etc/docker/daemon.json <<-'EOF'
 {
   "registry-mirrors": ["https://j6yjzbk6.mirror.aliyuncs.com"]
 }
 EOF
-sudo systemctl daemon-reload
-sudo systemctl restart docker
+systemctl daemon-reload
+systemctl restart docker
 ~~~
 
 # 3、底层工作原理
@@ -48,40 +52,15 @@ DockerServer接收到Docker-Client的指令，就会执行。
 # 4、镜像命令
 
 ~~~shell
-docker --version             # 显示docker的版本信息
-docker info					 # 显示docker的系统信息，包括镜像和容器的数量
-docker command --help		 # 帮助命令
-~~~
-
-~~~shell
-[root@localhost /]# docker images
--a # all，列出所有镜像
--q # quiet，只显示镜像的id
-~~~
-
-## 4.1 搜索镜像
-
-~~~shell
-[root@localhost /]# docker search mysql
-NAME                             DESCRIPTION                                     STARS   
-mysql/mysql-server               Optimized MySQL Server Docker images. Create…   907     
-centos/mysql-57-centos7          MySQL 5.7 SQL database server                   92
-mysql/mysql-cluster              Experimental MySQL Cluster Docker images. Cr…   92
-bitnami/mysql                    Bitnami MySQL Docker Image                      64       
-
+# 搜索镜像
+docker search mysql
 docker search mysql --filter=STARS=3000  # 过滤STARS大于3000的镜像
-~~~
 
-## 4.2 拉取镜像
-
-~~~shell
+# 拉取镜像
 docker pull mysql            # 如果不加tag，则默认下载latest版
 docker pull imageName[:tag]  # tag指定版本号
-~~~
 
-## 4.3 删除镜像
-
-~~~shell
+# 删除镜像
 docker rmi -f imageID # 通过镜像名或镜像id删除
 docker rmi -f $(docker iamges -aq)
 ~~~
@@ -95,63 +74,38 @@ docker ps  # 列出当前正在运行的所有容器
 -q    # 只显示容器的编号
 
 docker rm container_id  # 删除容器
-~~~
 
-## 5.1 启动和停止容器
-
-~~~shell
+# 启动容器
 docker start   container_id	 # 启动容器
 docker restart container_id	 # 重启容器
+# 停止容器
 docker stop    container_id	 # 停止当前正在运行的容器
 docker kill    container_id	 # 强制停止当前的容器
 ~~~
 
-## 5.2 运行nginx
+# 6、案例
 
 ~~~shell
-docker run -d --name nginx-container -p 3344:80 nginx
+# 启动nginx
+docker run -d --name nginx01 -p 3344:80 nginx
 # -d 后台运行
 # --name 容器命名
 # -p 宿主机端口:容器内端口
-docker exec -it nginx-container /bin/bash
+
+# 启动tomcat
+docker run -d --name tomcat01 -p 3345:8080 tomcat:9.0
+
+# 启动mysql，并且数据持久化
+docker run -d --name mysql01 
+-v /home/mysql/conf:/etc/mysql/conf.d 
+-v /home/mysql/data:/var/lib/mysql 
+-e MYSQL_ROOT_PASSWORD=your_password 
+-p 3306:3306 mysql:latest
+
+# 启动portainer，portainer是Docker的图形界面管理工具，提供了一个后台面板。
+docker run -d 
+-p 8088:9000 
+--restart=always 
+-v /var/run/docker.sock:/var/run/docker.sock 
+--privileged=true portainer/portainer
 ~~~
-
-## 5.3 运行tomcat
-
-~~~shell
-docker run -d --name tomcat-container -p 3345:8080 tomcat:9.0
-docker exec -it tomcat-container /bin/bash
-~~~
-
-# 6、安装portainer
-
-portainer是Docker的图形界面管理工具，并提供了一个后台面板供我们操作。
-
-~~~shell
-docker run -d -p 8088:9000 --restart=always -v /var/run/docker.sock:/var/run/docker.sock --privileged=true portainer/portainer
-~~~
-
-![](http://rpft9719g.hn-bkt.clouddn.com/portainer%E7%95%8C%E9%9D%A2.png?e=1675320466&token=MlMq1Crvxua6O4Yxy6tmktE1U6f2enNv2FFuhpTX:Hru53gvl-ClUZ6JItlXmPi9X0Y8=)
-
-# 7、容器数据卷
-
-这是一个容器之间的数据共享技术。在Docker容器中产生的数据同步到本地。（如果不这么做，那么我们把容器删除，数据就会丢失。）
-
-~~~shell
-docker run -it -v /home/ceshi:/home centos /bin/bash
-docker inspect b4138bb71efe  # 查看容器的详细信息
-~~~
-
-![](http://rpft9719g.hn-bkt.clouddn.com/%E5%AE%B9%E5%99%A8%E6%95%B0%E6%8D%AE%E5%8D%B7.png?e=1675320485&token=MlMq1Crvxua6O4Yxy6tmktE1U6f2enNv2FFuhpTX:CRA_mJ8nYwphDBt67YzQmXhNK6k=)
-
-**MySQL的数据持久化**
-
-~~~shell
-docker run -d --name mysql-container -v /home/mysql/conf:/etc/mysql/conf.d -v /home/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=your_password -p 3306:3306 mysql:latest
--d  # 后台运行
--p  # 端口映射
--v  # 卷挂载
--e  # 环境配置
---name  # 容器名字
-~~~
-
