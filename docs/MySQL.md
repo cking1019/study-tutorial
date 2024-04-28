@@ -1,59 +1,45 @@
-# 1、启动与备份
+# 1、MySQL服务器与客户端
 
 ~~~sql
 # 导入sql文件到数据库
 SOURCE C:\Users\Demo\Desktop\data.sql
+
+# 命令行客户端连接数据库
+mysql -h localhost -P 3306 -u user -p123456
+
+# 将MySQL注册到Windows服务中
+mysqld --install mysql
+# 将MySQL从服务中卸载
+mysqld --remove mysql
+# 初始化数据库，详细是：1、创建数据目录；2、初始化系统表空间；3、生成root密码。
+mysqld --initialize
+# 初始化无密码数据库
+mysqld --initialize-insecure
+# 跳过mysql密码登录
+mysqld --skip-grant-tables --shared-memory --console
 
 # 导出当前数据库下的所有表结构和表数据到指定文件
 mysqldump -u root -p mvp_prod > C:/Users/Demo/Desktop/data.sql
 # 从远程服务器中导出sh
 mysqldump -h 10.100.102.143 -u root -p test > ./data.sql
 
-# 连接数据库
-mysql -h localhost -P 3306 -u user -p123456
-
-# 显示授权信息
-show grants for 'ck' @'localhost';
-
-# 暂停当前服务，需要管理员权限
-net stop mysql_mvp
-# 将MySQL从服务中卸载
-mysqld --remove mysql
-# 将MySQL注册到Windows服务中
-mysqld --install mysql
-# 初始化数据库，包括1、创建数据目录；2、初始化系统表空间；3、生成root密码。
-mysqld --initialize
-mysqld --initialize-insecure  # 初始化后为无密码登录
-
-# 设置mysql用户支持外网访问
-UPDATE mysql.user SET host = '%' WHERE user='ck';
-
-create user 'ck' @'localhost' identified by '123456';
-
-# 跳过mysql密码登录
-mysqld --skip-grant-tables --shared-memory --console
-# 进入mysql后，设置无密码登陆
-UPDATE mysql.user SET authentication_string='' WHERE user='root';
-
-# 修改root用户的密码为123456
-ALTER user 'root'@'localhost' IDENTIFIED BY '123456';
 ~~~
 
 # 2、数据库术语及操作
 
 MySQL有四种操作语言，分别是**DDL**、**DML**、**DQL**、**DCL**。
 
-DDL：数据定义语言。包括创建数据库、创建表、修改表字段、删除表等操作；
+**DDL**：数据定义语言。包括创建数据库、创建表、修改表字段、删除表等操作；
 
-DML：数据操作语言。包括增加、删除、修改等操作；
+**DML**：数据操作语言。包括增加、删除、修改等操作；
 
-DQL：数据查询语言。包括查找操作；
+**DQL**：数据查询语言。包括查找操作；
 
-DCL：数据控制语言。包括授权与撤回操作。
+**DCL**：数据控制语言。包括授权与撤回操作。
 
 ## 2.1、数据定义语言(DDL)
 
-数据定义语言DDL(Data Definition Language)，操纵数据库和表；包括create、drop、alter等语句。
+数据定义语言DDL(Data Definition Language)，操纵数据库和表，包括但不限于create、drop、alter等语句。
 
 ~~~sql
 # 使用数据库
@@ -73,7 +59,7 @@ CREATE DATABASE menagerie;
 CREATE TABLE child (
     id INT,
     parent_id INT,
-    INDEX par_ind (parent_id),
+    INDEX par_ind (parent_id), # 定义一个索引
     FOREIGN KEY (parent_id)
         REFERENCES parent(id)
         ON UPDATE CASCADE  # 级联，父表更新时，子表实时更新；若没有，父表id更新会报错。
@@ -83,19 +69,18 @@ CREATE TABLE child (
 CREATE TABLE animals (
     grp ENUM('fish','mammal','bird') NOT NULL,
     id MEDIUMINT AUTO_INCREMENT NOT NULL,
-    name CHAR(30) NOT NULL,
-    PRIMARY KEY (grp,id)
+    name varchar(30) NOT NULL,
+    PRIMARY KEY (grp,id) # 声明多个字段为一个主键
 ) ENGINE=MyISAM;
-# 如果包含了多个索引(主键默认为索引)，那么在生成序列值时，MySQL 将忽略 PRIMARY KEY。
 
 # 删除表
 DROP TABLE child;
 
 DROP USER 'ck'@'localhost';
 drop：
-1、drop是DDL，会隐式提交，所以，不能回滚，不会触发触发器。
+1、drop是DDL，会隐式提交，所以不能回滚，不会触发触发器。
 2、drop语句删除表结构及所有数据，并将表所占用的空间全部释放。
-3、drop语句将删除表的结构所依赖的约束，触发器，索引，依赖于该表的存储过程/函数将保留,但是变为invalid状态。
+3、drop语句将删除表的结构所依赖的约束、触发器、索引。依赖于该表的存储过程/函数将保留,并会变为invalid状态。
 
 alter table <表名>
 [add <新字段名><数据类型><约束条件>]添加新的字段
@@ -105,11 +90,13 @@ alter table <表名>
 
 ## 2.2、数据操作语言(DML)
 
-数据操作语言(Data Manipulation Language )：对数据进行增删改，包括insert、delete、update等语句；
+数据操作语言(Data Manipulation Language )：对数据进行增删改，包括insert、delete、update等语句。
 
 ~~~sql
 # 插入
-INSERT INTO pet VALUES ('Puffball','Diane','hamster','f','1999-03-30',NULL);
+INSERT INTO pet 
+VALUES ('Puffball','Diane','hamster','f','1999-03-30',NULL),
+	   ('Puffball','Diane','hamster','f','1999-03-30',NULL);
 
 # 更新表
 UPDATE pet 
@@ -120,13 +107,7 @@ WHERE name = 'Bowser';
 DELETE FROM pet;
 
 # 删除用户
-delete from mysql.user where user = 'ck';
-
-delete：
-1、delete是DML，执行delete操作时，每次从表中删除一行，并且同时将该行的的删除操作记录在redo和undo表空间中以便进行回滚（rollback）和重做操作，
-但要注意表空间要足够大，需要手动提交（commit）操作才能生效，可以通过rollback撤消操作。
-2、delete可根据条件删除表中满足条件的数据，如果不指定where子句，那么删除表中所有记录。
-3、delete语句不影响表所占用的extent，高水线(high watermark)保持原位置不变。
+DELETE FROM mysql.user where user = 'ck';
 ~~~
 
 ## 2.3、数据查询语言(DQL)
@@ -155,13 +136,13 @@ SELECT name, species, birth FROM pet ORDER BY species, birth DESC;
 SELECT name, birth, CURDATE(), TIMESTAMPDIFF(YEAR, birth, CURDATE()) AS age FROM pet;
 
 # 模式匹配
-# 匹配开头
+# 1、匹配开头
 SELECT * FROM pet WHERE name LIKE 'b%';
-# 匹配结尾
+# 2、匹配结尾
 SELECT * FROM pet WHERE name LIKE '%fy';
-# 匹配包含
+# 3、匹配包含
 SELECT * FROM pet WHERE name LIKE '%w%';
-# 匹配字段长度为五个字符的记录
+# 4、匹配字段长度为五个字符的记录
 SELECT * FROM pet WHERE name LIKE '_____';
 
 # 利用正则表达式
@@ -169,8 +150,8 @@ SELECT * FROM pet WHERE REGEXP_LIKE(name, '^b');
 
 # 多表连接
 SELECT pet.name, TIMESTAMPDIFF(YEAR,birth,date) AS age, event1.remark 
-FROM pet 
-INNER JOIN event1 ON pet.name = event1.name WHERE event1.type = 'litter';
+FROM pet
+INNER JOIN event1 ON pet.name = event1.name;
 
 # 左连接
 SELECT s1.article, s1.dealer, s1.price
@@ -199,16 +180,27 @@ LIMIT 1;
 数据控制语言(Data Control Language )：授权。
 
 ~~~sql
-# 创建一个新用户
-CREATE USER 'cking'@'localhost' IDENTIFIED BY '123456';
+# 创建新用户
+create user 'ck' @'localhost' identified by '123456';
 
 # 授权
-grant all oN menagerie.* to 'ck'@'localhost';
-grant all on school to 'ck'@'localhost';
+grant  all on school.* to 'ck'@'localhost';
+grant  all on school   to 'ck'@'localhost';
 revoke all on school from 'ck'@'localhost';
 
+# 显示授权信息
+show grants for 'ck' @'localhost';
+
+# 设置用户支持外网访问
+UPDATE mysql.user SET host = '%' WHERE user='ck';
+# 设置用户无密码登陆
+UPDATE mysql.user SET authentication_string='' WHERE user='root';
+
+# 修改root用户密码
+ALTER user 'root'@'localhost' IDENTIFIED BY '123456';
+
 # 插入生成 AUTO_INCREMENT 值的记录后，可以像这样获取该值。
-# 如果使用一条 INSERT 语句插入多条记录，LAST_INSERT_ID() 只返回为第一条插入记录生成的值。
+# 如果使用一条INSERT语句插入多条记录，LAST_INSERT_ID()只返回为第一条插入记录生成的值。
 SELECT LAST_INSERT_ID();
 ~~~
 
@@ -270,8 +262,6 @@ ALTER TABLE tbl_name DROP PRIMARY KEY;
 - 聚集索引
 - 非聚集索引
 
-
-
 Q: 索引单个字段和索引多个字段的区别
 
 A: 索引单个字段和索引多个字段的主要区别在于索引涉及的字段数量和索引的用途。
@@ -288,8 +278,6 @@ A: 索引单个字段和索引多个字段的主要区别在于索引涉及的�
 3. **覆盖索引**：多个字段索引还可以用作覆盖索引，即可以满足查询的筛选条件和返回结果所需的字段，从而避免访问实际数据行，提高查询性能。
 
 综上所述，单个字段索引适用于单个字段的查询优化，而多个字段索引适用于需要优化多字段组合查询的情况，可以更好地支持复杂查询需求并提高查询效率。
-
-
 
 # 6、MySQL数据工具
 
@@ -315,23 +303,12 @@ MyISAM 中索引检索的算法为首先按照 B+Tree 搜索算法搜索索引�
 
 由于 InnoDB 利用的数据库主键作为索引 Key，所以 InnoDB 数据表文件本身就是主索引，且因为 InnoDB 数据文件需要按照主键聚集，所以使用 InnoDB 作为数据引擎的表需要有个主键，如果没有显式指定的话 MySQL 会尝试自动选择一个可以唯一标识数据的列作为主键，如果无法找到，则会生成一个隐含字段作为主键，这个字段长度为6个字节，类型为长整形。
 
-# 配置文件[my.ini]
+# 8、配置文件[my.ini]
 
 ~~~ini
 [mysqld]
-port=3306
-bind-address=0.0.0.0
-basedir=D:/tools/mysql-8.0.34-winx64
-datadir=D:/tools/mysql-8.0.34-winx64/data
-max_connections=200
-max_connect_errors=10
-character-set-server=utf8mb4
-default-storage-engine=INNODB
+basedir=D:/tools/mysql/mysql-8.0.34-winx64
+datadir=D:/tools/mysql/database
 authentication_policy=caching_sha2_password
-[mysql]
-default-character-set=utf8
-[client]
-port=3306
-default-character-set=utf8
 ~~~
 
