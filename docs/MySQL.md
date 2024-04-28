@@ -6,6 +6,8 @@ SOURCE C:\Users\Demo\Desktop\data.sql
 
 # 导出当前数据库下的所有表结构和表数据到指定文件
 mysqldump -u root -p mvp_prod > C:/Users/Demo/Desktop/data.sql
+# 从远程服务器中导出sh
+mysqldump -h 10.100.102.143 -u root -p test > ./data.sql
 
 # 连接数据库
 mysql -h localhost -P 3306 -u user -p123456

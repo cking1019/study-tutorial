@@ -37,7 +37,7 @@ ECHO hello || ECHO world  # 当第一条命令执行成功时，后面的命令�
 %~dp0  # 脚本文件执行目录
 %rootDir:~1,-1%  # ~1表示从开头第二个字符截取，-1表示从倒数第二个字符截取，一般用于消除两端双引号。
 set APP_BASE_NAME=%~n0  # 当前可执行批处理文件的文件名(无扩展名)
-set CMD_LINE_ARGS=%*  # 传递命令行参数。例如: test.bat -a 1 -b 2
+set CMD_LINE_ARGS=%*  # %*表示将所有参数作为字符串传入传递命令行参数。例如: test.bat -a 1 -b 2
 
 
 XCOPY D:\desktop E:\desktop /E /H /Y
