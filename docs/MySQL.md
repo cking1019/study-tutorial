@@ -135,7 +135,7 @@ SELECT name, birth FROM pet ORDER BY birth DESC;
 SELECT name, species, birth FROM pet ORDER BY species, birth DESC;
 SELECT name, birth, CURDATE(), TIMESTAMPDIFF(YEAR, birth, CURDATE()) AS age FROM pet;
 
-# 模式匹配
+# 模式匹配。切记，不是正则匹配，如果需要正则匹配，那么需要使用内置函数REGEXP_LIKE()
 # 1、匹配开头
 SELECT * FROM pet WHERE name LIKE 'b%';
 # 2、匹配结尾
