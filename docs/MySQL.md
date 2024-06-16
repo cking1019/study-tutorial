@@ -22,7 +22,6 @@ mysqld --skip-grant-tables --shared-memory --console
 mysqldump -u root -p mvp_prod > C:/Users/Demo/Desktop/data.sql
 # 从远程服务器中导出sh
 mysqldump -h 10.100.102.143 -u root -p test > ./data.sql
-
 ~~~
 
 # 2、数据库术语及操作

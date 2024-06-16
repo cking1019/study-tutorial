@@ -1,13 +1,14 @@
 # 1、常用命令
 
 ~~~shell
+# 管道运算符，将前一条命令的输出作为下一条命令的输入
 ps -ef | grep tomcat  # 查看当前系统运行的进程。f为format，显示全格式。
 ps -aux  # 查看当前所有进程
 
 top  # 性能分析工具，能够实时的显示系统中各个进程资源的占用情况，类似于windows的任务管理器。
 top -p 925  # 指定进程ID监控
 
-lsof -i:8080  # (list open files)显示该端口进程
+lsof -i:8080   # (list open files)显示该端口进程
 netstat -ntlp4 # 显示网络端口
 
 tar -zxvf filename.tar.gz  # 用于解压文件。gun zip
@@ -62,8 +63,8 @@ df -hl  # 查看磁盘分区上的磁盘空间。
 # -h  以可读性较高的方式来显示信息。
 # -l  仅显示本地的文件系统。
 
-mkdir dir_name  # 在当前目录下创建文件夹
-touch file_name  # 创建新文件
+mkdir dir_name   # 创建目录
+touch file_name  # 创建文件
 
 find *python*  # 查找当前目录下包含python关键字的文件
 find / -name 'read*'   # 在/目录下查找read开头的文件或目录
@@ -75,32 +76,42 @@ find / -name 'read*'   # 在/目录下查找read开头的文件或目录
 chown user_name:group_name file_name  # 更改当前文件的用户为user_name,组为group_name
 chmod 777 filename  # 即change mode,对当前文件授权
 chmod u+x hello.sh  # 给用户添加可执行权限
-chmod +x hello.sh  # 给当前用户、同组用户、其他用户添加可执行权限
-# 修改权限
+chmod +x hello.sh   # 给当前用户、同组用户、其他用户添加可执行权限
 # 三个数字分别表示u(拥有者)、g(同组用户)、o(其他用户)的权限;
 # 4(可读)+2(可写)=6(读写)110
 # r表示递归子目录
 
-su root  # 切换到root用户
+su root         # switch user。切换到root用户
 su passwd root  # 修改root用户密码
+
+# 查看服务器系统信息
+uname -a
+# 修改主机名
+vim /etc/hostname
+# 显示当前用户名称,必须大写
+echo $USER
+
+# 迁移文件
+scp wewe-rss.tar root@47.119.18.145:/root
 ~~~
 
-# 3、shell脚本的执行方式
-
-~~~shell
-1、输入脚本的绝对路径或相对路径
-例如/root/hello.sh 或 ./hello.sh
-注意：使用绝对或相对路径需要可执行权限
-2、bash或sh脚本
-例如，sh hello.sh
-3、在脚本前加source或'.'
-例如，source hello.sh等价于 . hello.sh
-~~~
-
-# 4、vim编辑器命令
+# 3、vim编辑器命令
 
 ~~~bat
-# 替换文件中的变量，/gbiao'sh
+# 进入命令行模式替换文件中的变量
 :%s/cn.archive.ubuntu.com/mirrors.aliyun.com/g
+
+# 复制一行文本
+yy + p
+
+# 删除一行
+dd
+
+# 使光标移动到文件内容首行
+shift+g or G
+# 使光标移动到文件内容尾行
+gg
+# 使光标移动到指定行数
+:<line_number>
 ~~~
 
