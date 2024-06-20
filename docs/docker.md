@@ -16,8 +16,6 @@ vim /etc/docker/daemon.json
         "https://ccr.ccs.tencentyun.com"
     ]
 }
-systemctl restart docker
-systemctl status docker
 
 # 安装社区版docker
 apt install docker-ce docker-ce-cli containerd.io
@@ -33,6 +31,8 @@ rm -rf /var/lib/docker
 
 # 2、镜像
 
+是对运行环境以及软件包的归档，可用于分发到其他服务器上。
+
 ~~~shell
 # 搜索镜像
 docker search mysql
@@ -45,6 +45,8 @@ docker images
 ~~~
 
 # 3、容器
+
+通过运行镜像启动容器，每个容器是一个单独的进程，也是一个微型Linux环境，容器之间互不干涉。
 
 ~~~shell
 # 每个容器都是一个Linux系统
@@ -72,26 +74,26 @@ docker save wewe-rss > wewe-rss.tar
 docker load < wewe-rss.tar
 ~~~
 
-# 4、案例
+# 4、命令启动案例
 
 ~~~shell
 # 启动nginx
 docker run -d \
---name mynginx \
+--name nginx \
 -p 80:80 \
 -p 443:443 \
--v /etc/docker/nginx/html:/usr/share/nginx/html \
--v /etc/docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro \
 -v /etc/docker/nginx/conf.d:/etc/nginx/conf.d \
--v /var/static:/var/static \
+-v /etc/docker/nginx/nginx.conf:/etc/nginx/nginx.conf \
+-v /var/docker/nginx/html:/usr/share/nginx/html \
+-v /var/docker/static:/var/static \
 nginx
 
 # 启动mysql，并且对数据进行持久化
 docker run -d \
 --name mysql \
 -p 3306:3306 \
--v ~/mysql/conf.d:/etc/mysql/conf.d \
--v ~/mysql/data:/var/lib/mysql \
+-v /etc/docker/mysql/conf.d:/etc/mysql/conf.d \
+-v /var/docker/mysql/data:/var/lib/mysql \
 -e MYSQL_ROOT_PASSWORD=123456 \
 mysql
 
@@ -99,11 +101,11 @@ mysql
 docker run -d \
 --name myredis \
 -p 6379:6379 \
--v ~/redis/redis.conf:/etc/redis/redis.conf \
--v ~/redis/data:/data \
+-v /etc/docker/redis/redis.conf:/etc/redis/redis.conf \
+-v /var/docker/redis/data:/data \
 redis
 
-# 启动portainer，portainer是Docker的图形界面管理工具，提供了一个后台面板。
+# 启动portainer
 docker run -d \
 --name portainer \
 -p 9443:9443 \
@@ -112,22 +114,22 @@ docker run -d \
 --restart=always \
 --privileged=true \
 portainer/portainer-ce \
---sslcert /cert/cking.icu.pem \
---sslkey  /cert/cking.icu.key
+--sslcert /etc/docker/nginx/nginx.conf/cert/cking.icu.pem \
+--sslkey  /etc/docker/nginx/nginx.conf/cert/cking.icu.key
 
-# 启动微信订阅web端
+# 启动wewe-rss
 docker run -d \
 --name wewe-rss \
 -p 4000:4000 \
 -e DATABASE_TYPE=sqlite \
 -e AUTH_CODE=123456 \
--v ~/wewe-rss:/app/data \
+-v /var/docker/wewe-rss/data:/app/data \
 cooderl/wewe-rss-sqlite
 ~~~
 
 # 5、制作镜像
 
-**命令：docker build -t demo .**
+**命令：docker build -t demo .** 可将语言环境与第三方包一起打包成镜像，便于打包传输。
 
 ~~~shell
 # 使用官方的 Java 11 镜像作为基础镜像
@@ -144,13 +146,14 @@ CMD ["java", "-jar", "demo.jar"]
 
 # 6、制作docker-compose文件
 
-**命令：docker compose up -d**
+**命令：docker compose up -d** 
+
+## 6.1 wee-rss
 
 ~~~yaml
-version: "3.9"
 services:
   wewe-rss:
-    image: cooderl/wewe-rss-sqlite:latest
+    image: cooderl/wewe-rss-sqlite
     container_name: wewe-rss
     restart: always
     ports:
@@ -159,6 +162,83 @@ services:
       - DATABASE_TYPE=sqlite
       - AUTH_CODE=123456
     volumes:
-      - ~/wewe-rss:/app/data
+      - /var/docker/wewe-rss/data:/app/data
+~~~
+
+## 6.2 mysql
+
+~~~yaml
+services:
+  mysql:
+    image: mysql
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+    volumes:
+      - /etc/docker/mysql/conf.d:/etc/mysql/conf.d
+      - /var/docker/mysql/data:/var/lib/mysql
+  redis:
+    image: redis
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /etc/docker/redis/redis.conf:/etc/redis/redis.conf
+      - /var/docker/redis/data:/data
+~~~
+
+## 6.3 nginx
+
+~~~yaml
+services:
+  nginx:
+    image: nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/docker/nginx/conf.d:/etc/nginx/conf.d
+      - /etc/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - /var/docker/nginx/html:/usr/share/nginx/html
+      - /var/docker/nginx/static:/var/static
+~~~
+
+## 6.4 kafka
+
+~~~yaml
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181:2181"
+    container_name: "zookeeper"
+    restart: always
+  kafka:
+    image: wurstmeister/kafka:2.12-2.3.0
+    container_name: "kafka"
+    ports:
+      - "9092:9092"
+    environment:
+      - TZ=CST-8
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      # 非必须，设置自动创建 topic
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_ADVERTISED_HOST_NAME=${IP}
+      - KAFKA_ADVERTISED_PORT=9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${IP}:9092
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      # 非必须，设置对内存
+      - KAFKA_HEAP_OPTS=-Xmx1G -Xms1G
+      # 非必须，设置保存7天数据，为默认值
+      - KAFKA_LOG_RETENTION_HOURS=168
+    volumes:
+      # 将 kafka 的数据文件映射出来
+      - /var/docker/kafka/data:/kafka
+      # 用于管理其他容器
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
 ~~~
 
