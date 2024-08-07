@@ -13,6 +13,7 @@ git config -l           # 显示local、global、system下所有的配置信息
 # 删除当前分支下所有.pyc文件的缓存，然后再push，即可删除远程分支的.pyc文件
 git rm --cached *.pyc
 git rm --cached -r target/
+git ls-files # 查看暂存区中文件信息
 
 git status  # 查看当前状态。
 
@@ -39,9 +40,13 @@ git fetch origin master:temp
 git diff temp  
 # 将临时分支temp合并到当前分支
 git merge tmep
-~~~
 
-~~~bash
+# 将当前主分支回退到历史记录
+git reset --hard 52ba984c4c548708ba587feff72d91c2e177f621
+# 将远程分支合并到当前分支
+git pull origin master
+
+
 git pull origin <远程分支名>:<本地分支名>
 git pull origin <远程分支名>
 

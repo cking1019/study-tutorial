@@ -1,32 +1,22 @@
 # 1、安装与卸载
 
 ~~~shell
-apt-get install ca-certificates curl gnupg lsb-release
+apt install ca-certificates curl gnupg lsb-release
 curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] http://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
-apt-get install docker-ce docker-ce-cli containerd.io
+apt install docker-ce docker-ce-cli containerd.io
 # 配置docker下载镜像地址
-vim /etc/docker/daemon.json
+cat /etc/docker/daemon.json
 {
     "registry-mirrors": [
+    	"https://dockerproxy.com",
         "https://9cpn8tt6.mirror.aliyuncs.com",
-        "https://dockerproxy.com",
-        "https://hub-mirror.c.163.com",
-        "https://mirror.baidubce.com",
-        "https://ccr.ccs.tencentyun.com"
+   		"https://ccr.ccs.tencentyun.com",
+    	"https://docker.nju.edu.cn"
     ]
 }
-
-# 安装社区版docker
-apt install docker-ce docker-ce-cli containerd.io
-# 卸载docker
-apt remove docker-ce docker-ce-cli containerd.io
 # 启动docker
 systemctl start docker
-# 输出docker系统信息
-docker info	
-# 删除资源，/var/lib/docker为docker的默认工作路径
-rm -rf /var/lib/docker
 ~~~
 
 # 2、镜像
@@ -49,82 +39,32 @@ docker images
 通过运行镜像启动容器，每个容器是一个单独的进程，也是一个微型Linux环境，容器之间互不干涉。
 
 ~~~shell
-# 每个容器都是一个Linux系统
 # 查看当前所有容器，包括正在运行与已经停止的容器
 docker ps -a
 # 删除容器，可以是容器ID或容器名称
 docker rm container_id  
 # 启动容器
-docker start   container_id	 # 启动容器
-docker restart container_id	 # 重启容器
+docker start   container_name	 # 启动容器
+docker restart container_name	 # 重启容器
 # 停止容器
-docker stop    container_id	 # 停止正在运行的容器
-docker kill    container_id	 # 强制停止当前的容器
+docker stop    container_name	 # 停止正在运行的容器
+docker kill    container_name	 # 强制停止当前的容器
 # 查看容器的详细信息
-docker inspect container_id  
+docker inspect container_name 
 # 以命令行的形式进入容器
 docker exec -it mysql /bin/bash
 # 将数据复制到mysql容器的根目录
 docker cp ~/test.sql mysql:/
 # 将容器内部的数据复制到外部环境
-docker cp 765b89f78cf0:/etc/nginx/nginx.conf /etc/docker/nginx/nginx.conf
-# 导出容器
+docker cp nginx:/etc/nginx/nginx.conf /etc/docker/nginx/nginx.conf
+# 导出镜像
 docker save wewe-rss > wewe-rss.tar
-# 导入容器
+# 导入镜像
 docker load < wewe-rss.tar
-~~~
-
-# 4、命令启动案例
-
-~~~shell
-# 启动nginx
-docker run -d \
---name nginx \
--p 80:80 \
--p 443:443 \
--v /etc/docker/nginx/conf.d:/etc/nginx/conf.d \
--v /etc/docker/nginx/nginx.conf:/etc/nginx/nginx.conf \
--v /var/docker/nginx/html:/usr/share/nginx/html \
--v /var/docker/static:/var/static \
-nginx
-
-# 启动mysql，并且对数据进行持久化
-docker run -d \
---name mysql \
--p 3306:3306 \
--v /etc/docker/mysql/conf.d:/etc/mysql/conf.d \
--v /var/docker/mysql/data:/var/lib/mysql \
--e MYSQL_ROOT_PASSWORD=123456 \
-mysql
-
-# 启动redis
-docker run -d \
---name myredis \
--p 6379:6379 \
--v /etc/docker/redis/redis.conf:/etc/redis/redis.conf \
--v /var/docker/redis/data:/data \
-redis
-
-# 启动portainer
-docker run -d \
---name portainer \
--p 9443:9443 \
--v /var/run/docker.sock:/var/run/docker.sock \
--v /etc/docker/nginx/conf.d/cert:/cert \
---restart=always \
---privileged=true \
-portainer/portainer-ce \
---sslcert /etc/docker/nginx/nginx.conf/cert/cking.icu.pem \
---sslkey  /etc/docker/nginx/nginx.conf/cert/cking.icu.key
-
-# 启动wewe-rss
-docker run -d \
---name wewe-rss \
--p 4000:4000 \
--e DATABASE_TYPE=sqlite \
--e AUTH_CODE=123456 \
--v /var/docker/wewe-rss/data:/app/data \
-cooderl/wewe-rss-sqlite
+# 导出容器
+docker export nginx -o nginx.tar
+# 导入容器
+docker import nginx.tar nginx
 ~~~
 
 # 5、制作镜像
@@ -146,7 +86,7 @@ CMD ["java", "-jar", "demo.jar"]
 
 # 6、制作docker-compose文件
 
-**命令：docker compose up -d** 
+**命令：docker compose.ymal up -d** 
 
 ## 6.1 wee-rss
 
@@ -157,7 +97,7 @@ services:
     container_name: wewe-rss
     restart: always
     ports:
-      - "4000:4000"
+      - 0.0.0.0:4000:4000
     environment:
       - DATABASE_TYPE=sqlite
       - AUTH_CODE=123456
@@ -165,15 +105,16 @@ services:
       - /var/docker/wewe-rss/data:/app/data
 ~~~
 
-## 6.2 mysql
+## 6.2 mysql-redis
 
 ~~~yaml
 services:
   mysql:
     image: mysql
     container_name: mysql
+    restart: always
     ports:
-      - "3306:3306"
+      - 0.0.0.0:3306:3306
     environment:
       - MYSQL_ROOT_PASSWORD=123456
     volumes:
@@ -183,10 +124,12 @@ services:
     image: redis
     container_name: redis
     ports:
-      - "6379:6379"
+      - 0.0.0.0:6379:6379
     volumes:
       - /etc/docker/redis/redis.conf:/etc/redis/redis.conf
       - /var/docker/redis/data:/data
+    depends_on:
+      
 ~~~
 
 ## 6.3 nginx
@@ -196,14 +139,16 @@ services:
   nginx:
     image: nginx
     container_name: nginx
+    restart: always
     ports:
-      - "80:80"
-      - "443:443"
+      - 0.0.0.0:80:80
+      - 0.0.0.0:443:443
     volumes:
       - /etc/docker/nginx/conf.d:/etc/nginx/conf.d
       - /etc/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
       - /var/docker/nginx/html:/usr/share/nginx/html
       - /var/docker/nginx/static:/var/static
+    command: ["nginx", "-g", "daemon off;"] # 如果是迁移过来的容器，那么需要加该命令
 ~~~
 
 ## 6.4 kafka
@@ -212,15 +157,16 @@ services:
 services:
   zookeeper:
     image: wurstmeister/zookeeper
-    ports:
-      - "2181:2181"
-    container_name: "zookeeper"
+    container_name: zookeeper
     restart: always
+    ports:
+      - 0.0.0.0:2181:2181
   kafka:
     image: wurstmeister/kafka:2.12-2.3.0
-    container_name: "kafka"
+    container_name: kafka
+    restart: always
     ports:
-      - "9092:9092"
+      - 0.0.0.0:9092:9092
     environment:
       - TZ=CST-8
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
@@ -239,6 +185,47 @@ services:
       - /var/docker/kafka/data:/kafka
       # 用于管理其他容器
       - /var/run/docker.sock:/var/run/docker.sock
+~~~
+
+## 6.5 portainer
+
+~~~yaml
+services:
+  portainer:
+    image: portainer/portainer-ce
+    container_name: portainer
     restart: always
+    ports:
+      - 0.0.0.0:9443:9443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/docker/nginx/conf.d/cert:/cert
+    privileged: true
+    command: 
+      - --ssl-cert
+      - /etc/docker/nginx/nginx.conf/cert/cking.icu.pem
+      - --ssl-key
+      - /etc/docker/nginx/nginx.conf/cert/cking.icu.key
+~~~
+
+## 6.6 mogodb
+
+~~~yaml
+services:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+      - MONGO_INITDB_DATABASE=demo
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=123456
+    ports:
+      - 0.0.0.0:27017:27017
+    volumes:
+      - /var/docker/mongodb/data:/data/db
+      - /var/docker/mongodb/logs:/data/logs
+      - /etc/docker/mongodb/config:/data/configdb
 ~~~
 

@@ -105,7 +105,7 @@ inject()
 ## 3.1、状态选项
 
 ~~~vue
-data
+data()
 props
 computed
 methods
@@ -128,7 +128,7 @@ compilerOptions
 beforeCreate
 created
 beforeMount
-mounted
+mounted()
 beforeUpdate
 updated
 beforeUnmount
@@ -176,12 +176,12 @@ $nextTick()  # 和全局版本的 nextTick() 的唯一区别就是组件传递�
 v-text
 v-html
 v-show
-v-if
+v-if: 判断指令
 v-else
 v-else-if
-v-for
-v-on
-v-bind
+v-for: 循环指令
+v-on: 可使用'@'表示
+v-bind: 可使用':'表示
 v-model
 v-slot
 v-once
