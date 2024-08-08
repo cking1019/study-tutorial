@@ -180,7 +180,7 @@ v-if: 判断指令
 v-else
 v-else-if
 v-for: 循环指令
-v-on: 可使用'@'表示
+v-on:   可使用'@'表示
 v-bind: 可使用':'表示
 v-model
 v-slot
