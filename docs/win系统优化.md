@@ -52,11 +52,11 @@ ntoskrnl.exe会启动**smss.exe**(Session Manager Subsystem)可执行文件初�
 
 ntoskrnl.exe会先后启动**services.exe**、**logonUI.exe**、**winlogon.exe**、**lsass.exe**。
 
-- services.exe：启动和停止服务。
+- **services.exe**：启动和停止服务。
 
-- logonUI.exe：启动系统登录界面。
-- winlogon.exe：Windows NT用户登录程序，以及管理用户登录和退出。
-- lsass.exe：本地安全权限服务，用于计算机本地安全和登录策略。
+- **logonUI.exe**：启动系统登录界面。
+- **winlogon.exe**：Windows NT用户登录程序，以及管理用户登录和退出。
+- **lsass.exe**：本地安全权限服务，用于计算机本地安全和登录策略。
 
 **userinit.exe**: 系统关键进程，管理启动顺序。
 
@@ -68,7 +68,7 @@ ntoskrnl.exe会先后启动**services.exe**、**logonUI.exe**、**winlogon.exe**
 
 ## 2.1、移除导航窗格多余目录
 
-~~~
+~~~txt
 计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\NameSpace
 ~~~
 
@@ -82,7 +82,7 @@ ntoskrnl.exe会先后启动**services.exe**、**logonUI.exe**、**winlogon.exe**
 |  音乐  | {3dfdf296-dbec-4fb4-81d1-6a3438bcf4de} |
 |  桌面  | {B4BFCC3A-DB2C-424C-B029-7FE99A87C641} |
 
-删除对应项即可删除对应目录。
+删除对应项即可删除对应文件夹。
 
 ## 2.2、删除快速访问
 
@@ -100,24 +100,25 @@ ntoskrnl.exe会先后启动**services.exe**、**logonUI.exe**、**winlogon.exe**
 
 找到System.IsPinnedToNameSpaceTree健，改值为0。
 
-
-
 # 3、注册表
 
 ~~~txt
-HKEY_CLASSES_ROOT
-HKEY_CURRENT_USER
-HKEY_LOCAL_MACHINE
-HKEY_USERS
-HKEY_CURRENT_CONFIG
-看是五个分支，其实就是HKEY_LOCAL_MACHINE、HKEY_USERS这两个才是真正的注册表键，其它都是从某个分支映射出来的，
-相当于快捷方式或是别名，这样的话看注册表就简单了许多了，现在说一下每个分支的作用：
-HKEY_CLASSES_ROOT：列出当前计算机注册的所有COM服务器和与应用程序相关联的所有文件扩展名。
-HKEY_CURRENT_USER：保存着当前登录到由这个注册服务的计算机上的用户配置文件。
-HKEY_LOCAL_MACHINE：保存操作系统及硬件相关信息的配置单元，它是一个公共的配置信息与具体用户无关，其中关键是两个键值
-SOFTWARE：保存着与这台电脑中安装的应用程序相关的设置。
-SYSTEM：WINDOWS所装载的设备驱动程序以及当WINDOWS启动时所需要的各种参数。
-HKEY_USERS：包含当前计算机所有用户配置文件。
-HKEY_CURRENT_CONFIG： 计算机当前会话中的所有硬件配置信息。
+HKEY_CLASSES_ROOT：当前计算机注册的所有COM服务器和与应用程序相关联的所有文件扩展名。
+HKEY_CURRENT_USER：当前登录到计算机的用户配置文件。
+*HKEY_LOCAL_MACHINE：保存操作系统及硬件相关信息的配置单元，它是一个公共的配置信息与具体用户无关，其中关键是两个键值
+*HKEY_USERS：包含当前计算机所有用户配置文件。
+HKEY_CURRENT_CONFIG：计算机当前会话中的所有硬件配置信息。
+主要是HKEY_LOCAL_MACHINE与HKEY_USERS两个分支，其余分支都是由这两个主分支映射出来的，相当于快捷方式。
+HKEY_CURRENT_USER.SOFTWARE：保存着与这台电脑中安装的应用程序相关的设置。
+HKEY_CURRENT_USER.SYSTEM：WINDOWS所装载的设备驱动程序以及当WINDOWS启动时所需要的各种参数。
 ~~~
 
+**设置系统托盘显示秒数**
+
+~~~powershell
+powershell.exe Set-ItemProperty -Path HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced -Name ShowSecondsInSystemClock -Value 1 -Force
+~~~
+
+# 4、允许无密码访问共享目录
+
+打开本地策略编辑器，计算机配置->Windows设置->安全设置->本地策略->安全选项->禁用使用空密码的本地账户只允许进行控制台登录。

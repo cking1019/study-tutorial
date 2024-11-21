@@ -57,6 +57,7 @@ docker exec -it mysql /bin/bash
 docker cp ~/test.sql mysql:/
 # 将容器内部的数据复制到外部环境
 docker cp nginx:/etc/nginx/nginx.conf /etc/docker/nginx/nginx.conf
+docker cp /etc/apt/sources.list nginx:/etc/apt/sources.list
 # 导出镜像
 docker save wewe-rss > wewe-rss.tar
 # 导入镜像
@@ -65,6 +66,24 @@ docker load < wewe-rss.tar
 docker export nginx -o nginx.tar
 # 导入容器
 docker import nginx.tar nginx
+
+# 查看当前所有容器与镜像占用的磁盘大小
+docker system df
+TYPE            TOTAL     ACTIVE    SIZE      RECLAIMABLE
+Images          11        7         4.485GB   1.848GB (41%)
+Containers      7         4         1.104GB   167B (0%)
+Local Volumes   6         1         607.5kB   474.6kB (78%)
+Build Cache     23        0         97.8MB    97.8MB
+
+# 查看所有网络
+docker network ls
+NETWORK ID     NAME                     DRIVER    SCOPE
+68269b63473d   bridge                   bridge    local
+8252cd1c4db6   docker-compose_default   bridge    local
+da64cca0d0a9   emlog_default            bridge    local
+5d803fb0cb2f   host                     host      local
+3c14c9773708   none                     null      local
+adb6ab05811b   root_default             bridge    local
 ~~~
 
 # 5、制作镜像
@@ -86,7 +105,7 @@ CMD ["java", "-jar", "demo.jar"]
 
 # 6、制作docker-compose文件
 
-**命令：docker compose.ymal up -d** 
+**命令：docker compose -f compose.ymal up -d** 
 
 ## 6.1 wee-rss
 
@@ -103,6 +122,11 @@ services:
       - AUTH_CODE=123456
     volumes:
       - /var/docker/wewe-rss/data:/app/data
+    networks:
+      - bridge
+networks:
+  bridge:
+    driver: bridge
 ~~~
 
 ## 6.2 mysql-redis
@@ -120,16 +144,24 @@ services:
     volumes:
       - /etc/docker/mysql/conf.d:/etc/mysql/conf.d
       - /var/docker/mysql/data:/var/lib/mysql
+    networks:
+      - bridge
   redis:
     image: redis
     container_name: redis
+    restart: always
     ports:
       - 0.0.0.0:6379:6379
     volumes:
       - /etc/docker/redis/redis.conf:/etc/redis/redis.conf
       - /var/docker/redis/data:/data
+    networks:
+      - bridge
     depends_on:
-      
+      - mysql
+networks:
+  bridge:
+    driver: bridge
 ~~~
 
 ## 6.3 nginx
