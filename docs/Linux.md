@@ -1,3 +1,27 @@
+# 0、目录解析
+
+~~~shell
+/bin:  存放用户可执行二进制文件
+/boot: 存放系统启动文件，如内核引导程序
+/dev:  存放设备文件
+/etc:  存放系统全局配置，如安装源配置
+/home: 用户家目录
+/lib:  存放系统库文件
+/media: 挂载媒体设备，如USB驱动器
+/opt:  存放第三方应用程序
+/proc: 存放当前内核与进程信息
+/root: 根用户的家目录
+/sbin: 存放系统管理员的可执行二进制文件
+/sys:  存放系统硬件信息和状态
+/tmp:  存放临时文件
+/var:  存放经常变化的文件
+/usr/lib:   存放第三方库文件
+/usr/bin:   存放用户安装的程序
+/usr/sbin:  存放系统管理员命令
+/usr/local: 用户编译与安装的程序
+/usr/include: 用户头文件
+~~~
+
 # 1、常用命令
 
 ~~~shell
@@ -9,7 +33,7 @@ top  # 性能分析工具，能够实时的显示系统中各个进程资源的�
 top -p 925  # 指定进程ID监控
 
 lsof -i:8080   # (list open files)显示该端口进程
-netstat -ntlp4 # 显示网络端口
+netstat -nlpt4 # 显示网络端口
 
 tar -zxvf filename.tar.gz  # 用于解压文件。gun zip
 -z  # 解压具有gzip的属性
@@ -30,29 +54,20 @@ vi file_name # 输入%d清除所有内容
 
 # 查找文件
 find . -name "libJsonShared.*"
-~~~
 
-# 2、防火墙设置
+# 为可执行文件创建链接，-s表示创建符号链接而非硬链接
+ln -s /usr/bin/whereis where
 
+# 自动查找并删除与已卸载的软件包相管理的所有依赖
+apt autoremove libboost-mpi-dev  # 卸载该软件包及依赖的软件包(没有被其他软件包依赖)
+apt remove libboost-mpi-dev      # 卸载该软件包以被依赖的
+apt purge  # 清除软件包的配置
+apt update # 更新软件安装源
+aptitude install libboost-dev-all
 
-~~~shell
-# 防火墙设置
-systemctl start firewalld  # 启动firewalld服务进程。
-systemctl restart firewalld
-systemctl stop firewalld
-# firewall是防火墙的名字，而firewalld是防火墙的服务进程名。d表示daemon的缩写，即幽灵进程，也叫守护进程。systemctl=>system control
-firewall-cmd --state      # 查看防火墙状态
-firewall-cmd --reload     # 重新载入配置，比如添加规则之后，需要执行此命令
-firewall-cmd --get-zones  # 列出支持的zone
-firewall-cmd --zone=public --list-ports        # 查看已开放的端口
-firewall-cmd --add-port=80/tcp --permanent     # 永久添加80端口
-firewall-cmd --remove-port=80/tcp --permanent  # 永久添加80端口
-firewall-cmd --zone=public --list-ports                   # 查看白名单列表
-firewall-cmd --zone=public --add-port=80/tcp --permanent  # 添加白名单端口
-firewall-cmd --zone=public --add-port=6000-7000/tcp --permanent
-~~~
+# deb包的安装，-i表示install
+dpkg -i nomachine.deb
 
-~~~shell
 rm *      # 删除当前目录下的所有文件
 rm -r     # 删除目录及其子目录下的所有文件
 rm -rf /  # 删除目录及其子目录下的所有文件，无需确定是否删除
@@ -80,9 +95,7 @@ tee -a res.txt  # 将标准输出复制到指定文件中，功能类似于重�
 ps -ef | tee res.txt
 ls -l 1> res  # 0标准输入、1标准输出、2错误输出，'>'默认是标准输出'1>'
 ls * 2>&1 | tee res.txt # 将错误输出重定向到标准输出，并写入至res.txt文件
-~~~
 
-~~~shell
 chmod 777 filename  # 即change mode,对当前文件授权
 chmod u+x hello.sh  # 给用户添加可执行权限
 chmod +x hello.sh   # 给当前用户、同组用户、其他用户添加可执行权限
@@ -102,6 +115,31 @@ echo $USER
 
 # 迁移文件
 scp wewe-rss.tar root@47.119.18.145:/root
+
+# 查看登录成功日志，第一列为登录名，启动或者重启会记录成reboot
+last -x
+# 
+lastb -x
+~~~
+
+# 2、防火墙设置
+
+
+~~~shell
+# 防火墙设置
+systemctl start firewalld  # 启动firewalld服务进程。
+systemctl restart firewalld
+systemctl stop firewalld
+# firewall是防火墙的名字，而firewalld是防火墙的服务进程名。d表示daemon的缩写，即幽灵进程，也叫守护进程。systemctl=>system control
+firewall-cmd --state      # 查看防火墙状态
+firewall-cmd --reload     # 重新载入配置，比如添加规则之后，需要执行此命令
+firewall-cmd --get-zones  # 列出支持的zone
+firewall-cmd --zone=public --list-ports        # 查看已开放的端口
+firewall-cmd --add-port=80/tcp --permanent     # 永久添加80端口
+firewall-cmd --remove-port=80/tcp --permanent  # 永久添加80端口
+firewall-cmd --zone=public --list-ports                   # 查看白名单列表
+firewall-cmd --zone=public --add-port=80/tcp --permanent  # 添加白名单端口
+firewall-cmd --zone=public --add-port=6000-7000/tcp --permanent
 ~~~
 
 # 3、vim编辑器命令
@@ -224,12 +262,5 @@ Ubuntu 18.04 bionic-security
 Ubuntu 20.04 LTS：Focal Fossa
 Ubuntu 21.04：Hirsute Hippo
 Ubuntu 21.10：Impish Indri
-
-# 自动查找并删除与已卸载的软件包相管理的所有依赖
-apt autoremove libboost-mpi-dev  # 卸载该软件包及依赖的软件包(没有被其他软件包依赖)
-apt remove libboost-mpi-dev      # 卸载该软件包以被依赖的
-apt purge  # 清除软件包的配置
-apt update # 更新软件安装源
-aptitude install
 ~~~
 
